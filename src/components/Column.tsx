@@ -14,117 +14,105 @@ interface Column {
   id: string;
   title: string;
   cards: Card[];
+  color: string;
 }
 
 interface ColumnProps {
   column: Column;
-  boardId: string;
-  onCardAdded: () => void;
+  onDelete: (columnId: string) => void;
+  onEdit: (columnId: string) => void;
+  onAddCard: (columnId: string, title: string) => void;
+  onDeleteCard: (columnId: string, cardId: string) => void;
+  onEditCard: (columnId: string, cardId: string, title: string, description: string) => void;
 }
 
-export default function Column({ column, boardId, onCardAdded }: ColumnProps) {
+export default function Column({ 
+  column, 
+  onDelete, 
+  onEdit,
+  onAddCard,
+  onDeleteCard,
+  onEditCard
+}: ColumnProps): JSX.Element {
   const [newCardTitle, setNewCardTitle] = useState('');
-  const [isAddingCard, setIsAddingCard] = useState(false);
-
-  const handleAddCard = () => {
-    if (newCardTitle.trim()) {
-      const boards = JSON.parse(sessionStorage.getItem('boards') || '[]');
-      const boardIndex = boards.findIndex((b: any) => b.id === boardId);
-      
-      if (boardIndex !== -1) {
-        const newCard = {
-          id: `${column.id}-${Date.now()}`,
-          title: newCardTitle,
-          description: '',
-        };
-
-        const columnIndex = boards[boardIndex].columns.findIndex(
-          (c: Column) => c.id === column.id
-        );
-
-        if (columnIndex !== -1) {
-          boards[boardIndex].columns[columnIndex].cards.push(newCard);
-          sessionStorage.setItem('boards', JSON.stringify(boards));
-          setNewCardTitle('');
-          setIsAddingCard(false);
-          onCardAdded();
-        }
-      }
-    }
-  };
 
   return (
-    <div className="w-72 bg-white dark:bg-dark-800 rounded-lg shadow-card hover:shadow-card-hover p-4 transition-all duration-200">
-      <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">{column.title}</h2>
-      <Droppable droppableId={`${boardId}-${column.id}`}>
-        {(provided: DroppableProvided, snapshot) => (
-          <div
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-            className={`space-y-2 min-h-[50px] p-2 rounded transition-all duration-200
-              ${snapshot.isDraggingOver ? 'bg-primary-50 dark:bg-primary-900/20 border-2 border-dashed border-primary-500' : 'bg-gray-50 dark:bg-dark-700'}`}
-          >
-            {column.cards.map((card, index) => (
-              <Draggable key={card.id} draggableId={card.id} index={index}>
-                {(provided: DraggableProvided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    style={{
-                      ...provided.draggableProps.style,
-                    }}
-                    className={`transform transition-transform duration-200 ${
-                      snapshot.isDragging ? 'scale-105 rotate-1 z-50' : 'hover:scale-[1.02]'
-                    }`}
-                  >
-                    <Card card={card} isDragging={snapshot.isDragging} />
-                  </div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
+    <div className="w-72 flex-shrink-0">
+      <div className="bg-gray-100 dark:bg-dark-700 rounded-lg h-full">
+        <div 
+          className="h-2 rounded-t-lg"
+          style={{ backgroundColor: column.color }}
+        />
+        <div className="p-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              {column.title}
+            </h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onEdit(column.id)}
+                className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => onDelete(column.id)}
+                className="p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           </div>
-        )}
-      </Droppable>
-
-      {isAddingCard ? (
-        <div className="mt-4">
-          <input
-            type="text"
-            value={newCardTitle}
-            onChange={(e) => setNewCardTitle(e.target.value)}
-            placeholder="Enter card title"
-            className="w-full p-2 border dark:border-dark-600 rounded mb-2 bg-white dark:bg-dark-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleAddCard();
-              }
-            }}
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleAddCard}
-              className="btn btn-primary"
-            >
-              Add Card
-            </button>
-            <button
-              onClick={() => setIsAddingCard(false)}
-              className="btn btn-secondary"
-            >
-              Cancel
-            </button>
+          <Droppable droppableId={column.id} type="card">
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="space-y-3 min-h-[50px]"
+              >
+                {column.cards.map((card, index) => (
+                  <Draggable key={card.id} draggableId={card.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <Card
+                          card={card}
+                          isDragging={snapshot.isDragging}
+                          onDelete={() => onDeleteCard(column.id, card.id)}
+                          onEdit={(title, description) => onEditCard(column.id, card.id, title, description)}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+          <div className="mt-3">
+            <input
+              type="text"
+              value={newCardTitle}
+              onChange={(e) => setNewCardTitle(e.target.value)}
+              placeholder="Add a card..."
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-dark-800 dark:text-gray-200"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  onAddCard(column.id, newCardTitle);
+                  setNewCardTitle('');
+                }
+              }}
+            />
           </div>
         </div>
-      ) : (
-        <button
-          onClick={() => setIsAddingCard(true)}
-          className="mt-4 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 w-full text-left p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded transition-colors duration-200"
-        >
-          + Add a card
-        </button>
-      )}
+      </div>
     </div>
   );
 } 
