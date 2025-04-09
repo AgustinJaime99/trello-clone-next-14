@@ -30,21 +30,14 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50 dark:bg-dark-900">
       <BoardMenu onBoardSelect={handleBoardSelect} />
-      <main className="flex-1 ml-64 p-6">
+      <main className="flex-1 ml-64 p-6 overflow-auto">
         {selectedBoardId ? (
           <Board boardId={selectedBoardId} />
         ) : (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                Select a board or create a new one
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Choose a board from the sidebar to get started
-              </p>
-            </div>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500 dark:text-gray-400">Select a board or create a new one</p>
           </div>
         )}
       </main>
