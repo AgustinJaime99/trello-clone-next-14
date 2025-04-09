@@ -4,8 +4,20 @@ import { useState } from 'react';
 import Board from '@/components/Board';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
+interface Card {
+  id: string;
+  title: string;
+  description: string;
+}
+
+interface Board {
+  id: string;
+  title: string;
+  cards: Card[];
+}
+
 export default function Home() {
-  const [boards, setBoards] = useState([
+  const [boards, setBoards] = useState<Board[]>([
     {
       id: '1',
       title: 'To Do',
@@ -46,31 +58,35 @@ export default function Home() {
       return;
     }
 
-    const sourceBoard = boards.find(board => board.id === source.droppableId);
-    const destBoard = boards.find(board => board.id === destination.droppableId);
+    // Create a new array to avoid mutating the state directly
+    const newBoards = boards.map(board => ({
+      ...board,
+      cards: [...board.cards]
+    }));
+
+    // Find the source and destination boards
+    const sourceBoard = newBoards.find(board => board.id === source.droppableId);
+    const destBoard = newBoards.find(board => board.id === destination.droppableId);
 
     if (!sourceBoard || !destBoard) {
       return;
     }
 
+    // Remove the card from the source board
     const [movedCard] = sourceBoard.cards.splice(source.index, 1);
-    
-    if (source.droppableId === destination.droppableId) {
-      // Moving within the same board
-      sourceBoard.cards.splice(destination.index, 0, movedCard);
-    } else {
-      // Moving to a different board
-      destBoard.cards.splice(destination.index, 0, movedCard);
-    }
 
-    setBoards([...boards]);
+    // Add the card to the destination board
+    destBoard.cards.splice(destination.index, 0, movedCard);
+
+    // Update the state
+    setBoards(newBoards);
   };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="min-h-screen bg-gray-100 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-900 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-800 mb-8">Trello Clone</h1>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-8">Trello Clone</h1>
           <div className="flex gap-4 overflow-x-auto pb-4">
             {boards.map((board) => (
               <Board

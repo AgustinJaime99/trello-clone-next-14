@@ -47,25 +47,27 @@ export default function Board({ board, boards, setBoards }: BoardProps) {
   };
 
   return (
-    <div className="w-72 bg-white rounded-lg shadow p-4">
-      <h2 className="text-lg font-semibold mb-4">{board.title}</h2>
+    <div className="w-72 bg-white dark:bg-dark-800 rounded-lg shadow-card hover:shadow-card-hover p-4 transition-all duration-200">
+      <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">{board.title}</h2>
       <Droppable droppableId={board.id}>
         {(provided: DroppableProvided) => (
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className="space-y-2 min-h-[50px] bg-gray-50 p-2 rounded"
+            className="space-y-2 min-h-[50px] bg-gray-50 dark:bg-dark-700 p-2 rounded transition-colors duration-200"
           >
             {board.cards.map((card, index) => (
               <Draggable key={card.id} draggableId={card.id} index={index}>
-                {(provided: DraggableProvided) => (
+                {(provided: DraggableProvided, snapshot) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="transform transition-transform hover:scale-105"
+                    className={`transform transition-transform duration-200 ${
+                      snapshot.isDragging ? 'scale-105 rotate-1' : 'hover:scale-105'
+                    }`}
                   >
-                    <Card card={card} />
+                    <Card card={card} isDragging={snapshot.isDragging} />
                   </div>
                 )}
               </Draggable>
@@ -82,7 +84,7 @@ export default function Board({ board, boards, setBoards }: BoardProps) {
             value={newCardTitle}
             onChange={(e) => setNewCardTitle(e.target.value)}
             placeholder="Enter card title"
-            className="w-full p-2 border rounded mb-2"
+            className="w-full p-2 border dark:border-dark-600 rounded mb-2 bg-white dark:bg-dark-700 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleAddCard();
@@ -107,7 +109,7 @@ export default function Board({ board, boards, setBoards }: BoardProps) {
       ) : (
         <button
           onClick={() => setIsAddingCard(true)}
-          className="mt-4 text-gray-600 hover:text-gray-800 w-full text-left p-2 hover:bg-gray-100 rounded"
+          className="mt-4 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 w-full text-left p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded transition-colors duration-200"
         >
           + Add a card
         </button>
