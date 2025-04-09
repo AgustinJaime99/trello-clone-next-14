@@ -81,6 +81,44 @@ export default function BoardMenu({ onBoardSelect }: BoardMenuProps) {
     }
   };
 
+  const handleCreateBoard = () => {
+    const newBoard: Board = {
+      id: `board-${Date.now()}`,
+      title: newBoardTitle,
+      columns: [
+        {
+          id: `column-${Date.now()}-1`,
+          title: 'To Do',
+          cards: [],
+          color: '#ef4444' // Rojo
+        },
+        {
+          id: `column-${Date.now()}-2`,
+          title: 'In Progress',
+          cards: [],
+          color: '#f59e0b' // Amarillo
+        },
+        {
+          id: `column-${Date.now()}-3`,
+          title: 'Done',
+          cards: [],
+          color: '#10b981' // Verde
+        }
+      ]
+    };
+
+    const updatedBoards = [...boards, newBoard];
+    setBoards(updatedBoards);
+    sessionStorage.setItem('boards', JSON.stringify(updatedBoards));
+    setNewBoardTitle('');
+  };
+
+  const handleDeleteBoard = (boardId: string) => {
+    const updatedBoards = boards.filter(board => board.id !== boardId);
+    setBoards(updatedBoards);
+    sessionStorage.setItem('boards', JSON.stringify(updatedBoards));
+  };
+
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700 z-50">
       <div className="flex flex-col h-full">

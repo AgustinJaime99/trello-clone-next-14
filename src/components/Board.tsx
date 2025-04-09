@@ -53,29 +53,59 @@ export default function Board({ boardId }: BoardProps) {
   const handleDragEnd = (result: DropResult) => {
     if (!board) return;
 
-    const { destination, source, type } = result;
-
-    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
-      return;
-    }
-
-    const newBoard = JSON.parse(JSON.stringify(board));
+    const { source, destination, type } = result;
+    if (!destination) return;
 
     if (type === 'column') {
-      const [removed] = newBoard.columns.splice(source.index, 1);
-      newBoard.columns.splice(destination.index, 0, removed);
-    } else {
-      const sourceColumn = newBoard.columns.find((col: Column) => col.id === source.droppableId);
-      const destColumn = newBoard.columns.find((col: Column) => col.id === destination.droppableId);
+      const newColumns = Array.from(board.columns);
+      const [removed] = newColumns.splice(source.index, 1);
+      newColumns.splice(destination.index, 0, removed);
 
-      if (sourceColumn && destColumn) {
-        const [removed] = sourceColumn.cards.splice(source.index, 1);
-        destColumn.cards.splice(destination.index, 0, removed);
+      const newBoard = {
+        ...board,
+        columns: newColumns
+      };
+
+      setBoard(newBoard);
+      sessionStorage.setItem('boards', JSON.stringify([newBoard]));
+    } else {
+      const sourceColumn = board.columns.find(col => col.id === source.droppableId);
+      const destColumn = board.columns.find(col => col.id === destination.droppableId);
+
+      if (!sourceColumn || !destColumn) return;
+
+      const sourceCards = Array.from(sourceColumn.cards);
+      const [removed] = sourceCards.splice(source.index, 1);
+
+      if (source.droppableId === destination.droppableId) {
+        sourceCards.splice(destination.index, 0, removed);
+        const newBoard = {
+          ...board,
+          columns: board.columns.map(col =>
+            col.id === source.droppableId ? { ...col, cards: sourceCards } : col
+          )
+        };
+        setBoard(newBoard);
+        sessionStorage.setItem('boards', JSON.stringify([newBoard]));
+      } else {
+        const destCards = Array.from(destColumn.cards);
+        destCards.splice(destination.index, 0, removed);
+        const newBoard = {
+          ...board,
+          columns: board.columns.map(col => {
+            if (col.id === source.droppableId) {
+              return { ...col, cards: sourceCards };
+            }
+            if (col.id === destination.droppableId) {
+              return { ...col, cards: destCards };
+            }
+            return col;
+          })
+        };
+        setBoard(newBoard);
+        sessionStorage.setItem('boards', JSON.stringify([newBoard]));
       }
     }
-
-    setBoard(newBoard);
-    sessionStorage.setItem('boards', JSON.stringify(newBoard));
   };
 
   const handleAddColumn = () => {
@@ -85,7 +115,7 @@ export default function Board({ boardId }: BoardProps) {
       id: `column-${Date.now()}`,
       title: 'New Column',
       cards: [],
-      color: '#94a3b8' // Color gris por defecto
+      color: '#94a3b8'
     };
 
     const newBoard = {
@@ -94,7 +124,7 @@ export default function Board({ boardId }: BoardProps) {
     };
 
     setBoard(newBoard);
-    sessionStorage.setItem('boards', JSON.stringify(newBoard));
+    sessionStorage.setItem('boards', JSON.stringify([newBoard]));
   };
 
   const handleDeleteColumn = (columnId: string) => {
@@ -106,7 +136,7 @@ export default function Board({ boardId }: BoardProps) {
     };
 
     setBoard(newBoard);
-    sessionStorage.setItem('boards', JSON.stringify(newBoard));
+    sessionStorage.setItem('boards', JSON.stringify([newBoard]));
   };
 
   const handleEditColumn = (columnId: string) => {
@@ -133,7 +163,7 @@ export default function Board({ boardId }: BoardProps) {
     };
 
     setBoard(newBoard);
-    sessionStorage.setItem('boards', JSON.stringify(newBoard));
+    sessionStorage.setItem('boards', JSON.stringify([newBoard]));
     setEditingColumn(null);
   };
 
@@ -144,11 +174,8 @@ export default function Board({ boardId }: BoardProps) {
     }));
   };
 
-  const handleAddCard = (columnId: string) => {
-    if (!board) return;
-
-    const title = newCardTitles[columnId]?.trim();
-    if (!title) return;
+  const handleAddCard = (columnId: string, title: string) => {
+    if (!board || !title.trim()) return;
 
     const newCard: Card = {
       id: `card-${Date.now()}`,
@@ -166,8 +193,7 @@ export default function Board({ boardId }: BoardProps) {
     };
 
     setBoard(newBoard);
-    setNewCardTitles(prev => ({ ...prev, [columnId]: '' }));
-    sessionStorage.setItem('boards', JSON.stringify(newBoard));
+    sessionStorage.setItem('boards', JSON.stringify([newBoard]));
   };
 
   const handleDeleteCard = (columnId: string, cardId: string) => {
@@ -183,7 +209,7 @@ export default function Board({ boardId }: BoardProps) {
     };
 
     setBoard(newBoard);
-    sessionStorage.setItem('boards', JSON.stringify(newBoard));
+    sessionStorage.setItem('boards', JSON.stringify([newBoard]));
   };
 
   const handleEditCard = (columnId: string, cardId: string, title: string, description: string) => {
@@ -196,9 +222,7 @@ export default function Board({ boardId }: BoardProps) {
           ? {
               ...column,
               cards: column.cards.map(card =>
-                card.id === cardId
-                  ? { ...card, title, description }
-                  : card
+                card.id === cardId ? { ...card, title, description } : card
               )
             }
           : column
@@ -206,7 +230,7 @@ export default function Board({ boardId }: BoardProps) {
     };
 
     setBoard(newBoard);
-    sessionStorage.setItem('boards', JSON.stringify(newBoard));
+    sessionStorage.setItem('boards', JSON.stringify([newBoard]));
   };
 
   return (
@@ -305,7 +329,7 @@ export default function Board({ boardId }: BoardProps) {
                                   className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-dark-800 dark:text-gray-200"
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
-                                      handleAddCard(column.id);
+                                      handleAddCard(column.id, newCardTitles[column.id] || '');
                                     }
                                   }}
                                 />
